@@ -173,6 +173,7 @@ public:
      * \param bandwidth the filter bandwidth in Hz
      */
     virtual void set_bandwidth(double bandwidth, size_t chan = 0) = 0;
+    virtual double get_bandwidth(size_t chan = 0) = 0;
 
     /*!
      * Get a daughterboard sensor value.

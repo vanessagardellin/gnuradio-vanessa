@@ -22,6 +22,11 @@
 #include <gr_uhd_usrp_sink.h>
 #include <gr_io_signature.h>
 #include <stdexcept>
+#include <stdio.h>
+
+FILE * fp;
+int count;
+
 
 /***********************************************************************
  * UHD Multi USRP Sink Impl
@@ -43,6 +48,8 @@ public:
         _has_time_spec(_nchan > 1)
     {
         _dev = uhd::usrp::multi_usrp::make(device_addr);
+	fp = fopen("./usrpOutput","w");
+	count = 0;
     }
 
     void set_subdev_spec(const std::string &spec, size_t mboard){
@@ -115,6 +122,10 @@ public:
     void set_bandwidth(double bandwidth, size_t chan){
         return _dev->set_tx_bandwidth(bandwidth, chan);
     }
+    
+    double get_bandwidth(size_t chan){
+        return _dev->get_tx_bandwidth(chan);
+    }
 
     uhd::sensor_value_t get_dboard_sensor(const std::string &name, size_t chan){
         return _dev->get_tx_sensor(name, chan);
@@ -175,6 +186,7 @@ public:
 /***********************************************************************
  * Work
  **********************************************************************/
+
     int work(
         int noutput_items,
         gr_vector_const_void_star &input_items,
@@ -189,9 +201,12 @@ public:
             input_items, noutput_items, _metadata,
             _type, uhd::device::SEND_MODE_FULL_BUFF, 1.0
         );
-
+	
         //increment the timespec by the number of samples sent
         _metadata.time_spec += uhd::time_spec_t(0, num_sent, _sample_rate);
+	fprintf(fp, "WORK --> count = %d num sample sent %.2f sample_rate %.2f max_samp_pkt %.2f\n", 
+		count, (float) num_sent, _sample_rate, _dev->get_device()->get_max_send_samps_per_packet());
+	count ++;
         return num_sent;
     }
 
