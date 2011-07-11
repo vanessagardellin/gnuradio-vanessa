@@ -26,7 +26,7 @@ import gnuradio.gr.gr_threading as _threading
 import psk, qam
 
 from gnuradio.blks2impl.ofdm_receiver import ofdm_receiver
-
+import time
 
 # /////////////////////////////////////////////////////////////////////////////
 #                   mod/demod with packets as i/o
@@ -61,6 +61,8 @@ class ofdm_mod(gr.hier_block2):
         self._fft_length = options.fft_length
         self._occupied_tones = options.occupied_tones
         self._cp_length = options.cp_length
+        
+        finfo = open('./ofdmINFO', 'w')
 
         win = [] #[1 for i in range(self._fft_length)]
 
@@ -102,6 +104,8 @@ class ofdm_mod(gr.hier_block2):
         self.cp_adder = gr.ofdm_cyclic_prefixer(self._fft_length, symbol_length)
         self.scale = gr.multiply_const_cc(1.0 / math.sqrt(self._fft_length))
         
+        print>> finfo, "modulation %s \t fft_length %d \t occupied_tones %d \t cp_length %d \t arity %d" % (self._modulation, self._fft_length, self._occupied_tones, self._cp_length, arity )
+        
         self.connect((self._pkt_input, 0), (self.preambles, 0))
         self.connect((self._pkt_input, 1), (self.preambles, 1))
         self.connect(self.preambles, self.ifft, self.cp_adder, self.scale, self)
@@ -126,14 +130,24 @@ class ofdm_mod(gr.hier_block2):
         @param payload: data to send
         @type payload: string
         """
+        
+        fqueue = open('./queuepkt', 'a')
+        
+        
         if eof:
             msg = gr.message(1) # tell self._pkt_input we're not sending any more packets
         else:
-            # print "original_payload =", string_to_hex_list(payload)
+            #print "original_payload =", string_to_hex_list(payload)
             pkt = ofdm_packet_utils.make_packet(payload, 1, 1, self._pad_for_usrp, whitening=True)
             
-            #print "pkt =", string_to_hex_list(pkt)
             msg = gr.message_from_string(pkt)
+            
+            print>>  fqueue, "%.2f \t len(pkt): %d \t pkt_in_queue_before_insert %d" % (time.clock(), len(pkt), self._pkt_input.msgq().count())
+            
+            if 0:
+		print "len(pkt)=", len(pkt)
+		print "pkt =", ofdm_packet_utils.string_to_hex_list(pkt)
+            
         self._pkt_input.msgq().insert_tail(msg)
 
     def add_options(normal, expert):
@@ -195,6 +209,8 @@ class ofdm_demod(gr.hier_block2):
         self._occupied_tones = options.occupied_tones
         self._cp_length = options.cp_length
         self._snr = options.snr
+        
+        finfo = open('./ofdmINFO', 'w')
 
         # Use freq domain to get doubled-up known symbol for correlation in time domain
         zeros_on_left = int(math.ceil((self._fft_length - self._occupied_tones)/2.0))
@@ -230,6 +246,9 @@ class ofdm_demod(gr.hier_block2):
                                              self._rcvd_pktq,
                                              self._occupied_tones,
                                              phgain, frgain)
+                                             
+        print>> finfo, "modulation %s \t fft_length %d \t occupied_tones %d \t cp_length %d \t snr %d \t arity %d" % (self._modulation, self._fft_length, self._occupied_tones, self._cp_length, self._snr, arity )
+        
 
         self.connect(self, self.ofdm_recv)
         self.connect((self.ofdm_recv, 0), (self.ofdm_demod, 0))
@@ -289,6 +308,7 @@ class _queue_watcher_thread(_threading.Thread):
     def run(self):
         while self.keep_running:
             msg = self.rcvd_pktq.delete_head()
+            print "Message picked up from the queue"
             ok, payload = ofdm_packet_utils.unmake_packet(msg.to_string())
             if self.callback:
                 self.callback(ok, payload)

@@ -137,7 +137,16 @@ def make_packet(payload, samples_per_symbol, bits_per_symbol,
     else:
         pkt = pkt_hd + pkt_dt
 
-    #print "make_packet: len(pkt) =", len(pkt)
+    if 0:
+      #print "make_packet: len(pkt) =", len(pkt)
+      print "\n"
+      print "len(pkt_hd) = %d + len(pkt_dt)= %d ==> len(pkt)= %d" % (len(pkt_hd), len(pkt_dt), len(pkt))
+      print "len(payload)=", len(payload)
+      print "len(payload_with_crc)=", len(payload_with_crc)
+      print "plus 1 byte of preamble"
+      print "\n"
+      print "samples_per_symbol=", samples_per_symbol
+      print "bits_per_symbol=", bits_per_symbol
 
     return pkt
 
