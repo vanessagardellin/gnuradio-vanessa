@@ -441,6 +441,8 @@ swiginclude_HEADERS =			\
 	gr_null_sink.i			\
 	gr_null_source.i		\
 	gr_ofdm_frame_acquisition.i	\
+	gr_ofdm_alamouti_frame_acquisition.i	\
+	gr_ofdm_mrc_frame_acquisition.i	\
         gr_ofdm_cyclic_prefixer.i       \
         gr_ofdm_demapper_vcb.i          \
         gr_ofdm_mapper_bcv.i            \
