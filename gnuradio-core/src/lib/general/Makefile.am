@@ -273,6 +273,8 @@ grinclude_HEADERS = 			\
 	gr_null_sink.h			\
 	gr_null_source.h		\
 	gr_ofdm_frame_acquisition.h	\
+	gr_ofdm_alamouti_frame_acquisition.h	\
+	gr_ofdm_mrc_frame_acquisition.h	\
         gr_ofdm_cyclic_prefixer.h       \
         gr_ofdm_demapper_vcb.h          \
         gr_ofdm_mapper_bcv.h            \
