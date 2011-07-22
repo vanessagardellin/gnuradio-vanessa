@@ -1,6 +1,6 @@
 /* -*- c++ -*- */
 /*
- * Copyright 2006,2007,2008,2010 Free Software Foundation, Inc.
+ * Copyright 2006,2007,2008 Free Software Foundation, Inc.
  * 
  * This file is part of GNU Radio
  * 
@@ -32,15 +32,17 @@
 
 gr_ofdm_mapper_bcv_sptr
 gr_make_ofdm_mapper_bcv (const std::vector<gr_complex> &constellation, unsigned int msgq_limit, 
-			 unsigned int occupied_carriers, unsigned int fft_length)
+			 unsigned int occupied_carriers, unsigned int fft_length,
+			 unsigned int output_mult)
 {
-  return gnuradio::get_initial_sptr(new gr_ofdm_mapper_bcv (constellation, msgq_limit, 
-							  occupied_carriers, fft_length));
+  return gr_ofdm_mapper_bcv_sptr (new gr_ofdm_mapper_bcv (constellation, msgq_limit, 
+							  occupied_carriers, fft_length, output_mult));
 }
 
 // Consumes 1 packet and produces as many OFDM symbols of fft_length to hold the full packet
 gr_ofdm_mapper_bcv::gr_ofdm_mapper_bcv (const std::vector<gr_complex> &constellation, unsigned int msgq_limit, 
-					unsigned int occupied_carriers, unsigned int fft_length)
+					unsigned int occupied_carriers, unsigned int fft_length,
+					unsigned int output_mult)
   : gr_sync_block ("ofdm_mapper_bcv",
 		   gr_make_io_signature (0, 0, 0),
 		   gr_make_io_signature2 (1, 2, sizeof(gr_complex)*fft_length, sizeof(char))),
@@ -51,15 +53,18 @@ gr_ofdm_mapper_bcv::gr_ofdm_mapper_bcv (const std::vector<gr_complex> &constella
     d_bit_offset(0),
     d_pending_flag(0),
     d_resid(0),
-    d_nresid(0)
+    d_nresid(0),
+    d_output_mult(output_mult),
+    d_output_phase(0)
 {
+  //std::cout << "Output mult = " << d_output_mult << std::endl;
   if (!(d_occupied_carriers <= d_fft_length))
     throw std::invalid_argument("gr_ofdm_mapper_bcv: occupied carriers must be <= fft_length");
 
   // this is not the final form of this solution since we still use the occupied_tones concept,
   // which would get us into trouble if the number of carriers we seek is greater than the occupied carriers.
   // Eventually, we will get rid of the occupied_carriers concept.
-  std::string carriers = "FE7F";
+  std::string carriers = "FC3F";
 
   // A bit hacky to fill out carriers to occupied_carriers length
   int diff = (d_occupied_carriers - 4*carriers.length()); 
@@ -113,7 +118,7 @@ gr_ofdm_mapper_bcv::gr_ofdm_mapper_bcv (const std::vector<gr_complex> &constella
     throw std::invalid_argument("gr_ofdm_mapper_bcv: subcarriers allocated exceeds size of occupied carriers");
   }
   
-  d_nbits = (unsigned long)ceil(log10(float(d_constellation.size())) / log10(2.0));
+  d_nbits = (unsigned long)ceil(log10(d_constellation.size()) / log10(2.0));
 }
 
 gr_ofdm_mapper_bcv::~gr_ofdm_mapper_bcv(void)
@@ -145,7 +150,8 @@ gr_ofdm_mapper_bcv::work(int noutput_items,
     d_msg_offset = 0;
     d_bit_offset = 0;
     d_pending_flag = 1;			   // new packet, write start of packet flag
-    
+    d_output_phase = 0;
+
     if((d_msg->length() == 0) && (d_msg->type() == 1)) {
       d_msg.reset();
       return -1;		// We're done; no more messages coming.
@@ -219,23 +225,25 @@ gr_ofdm_mapper_bcv::work(int noutput_items,
       d_nresid = 0;
       d_resid = 0;
     }
-
-    //while(i < d_occupied_carriers) {   // finish filling out the symbol
+    
     while(i < d_subcarrier_map.size()) {   // finish filling out the symbol
       out[d_subcarrier_map[i]] = d_constellation[randsym()];
-
       i++;
     }
+    
+    if(d_output_phase == d_output_mult-1) {
+      if (d_msg->type() == 1)	        // type == 1 sets EOF
+	d_eof = true;
+      d_msg.reset();   			// finished packet, free message
+    }
 
-    if (d_msg->type() == 1)	        // type == 1 sets EOF
-      d_eof = true;
-    d_msg.reset();   			// finished packet, free message
     assert(d_bit_offset == 0);
   }
-
+  
   if (out_flag)
     out_flag[0] = d_pending_flag;
   d_pending_flag = 0;
-
+  
+  d_output_phase = (d_output_phase + 1) % d_output_mult;
   return 1;  // produced symbol
 }

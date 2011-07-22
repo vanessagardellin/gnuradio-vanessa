@@ -26,7 +26,8 @@ gr_ofdm_mapper_bcv_sptr
 gr_make_ofdm_mapper_bcv (const std::vector<gr_complex> &constellation,
 			 unsigned int msgq_limit,
 			 unsigned int bits_per_symbol, 
-			 unsigned int fft_length) throw(std::exception);
+			 unsigned int fft_length,
+			 unsigned int output_mult = 1);
 
 
 class gr_ofdm_mapper_bcv : public gr_sync_block
@@ -35,7 +36,8 @@ class gr_ofdm_mapper_bcv : public gr_sync_block
   gr_ofdm_mapper_bcv (const std::vector<gr_complex> &constellation,
 		      unsigned int msgq_limit,
 		      unsigned int bits_per_symbol,
-		      unsigned int fft_length);
+		      unsigned int fft_length,
+		      unsigned int output_mult);
   
  public:
   gr_msg_queue_sptr msgq();
