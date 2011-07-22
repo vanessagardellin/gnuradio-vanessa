@@ -94,7 +94,10 @@
 #include <gr_probe_avg_mag_sqrd_cf.h>
 #include <gr_probe_avg_mag_sqrd_f.h>
 #include <gr_probe_signal_f.h>
+#include <gr_ofdm_alamouti_tx_cc.h>
 #include <gr_ofdm_frame_acquisition.h>
+#include <gr_ofdm_alamouti_frame_acquisition.h>
+#include <gr_ofdm_mrc_frame_acquisition.h>
 #include <gr_ofdm_cyclic_prefixer.h>
 #include <gr_ofdm_mapper_bcv.h>
 #include <gr_ofdm_frame_sink.h>
