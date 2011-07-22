@@ -106,7 +106,10 @@ libgeneral_la_SOURCES = 		\
 	gr_nop.cc			\
 	gr_null_sink.cc			\
 	gr_null_source.cc		\
+	gr_ofdm_alamouti_tx_cc.cc	\
 	gr_ofdm_frame_acquisition.cc	\
+	gr_ofdm_alamouti_frame_acquisition.cc\
+	gr_ofdm_mrc_frame_acquisition.cc\
         gr_ofdm_cyclic_prefixer.cc      \
         gr_ofdm_demapper_vcb.cc         \
         gr_ofdm_mapper_bcv.cc           \
