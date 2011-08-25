@@ -308,7 +308,6 @@ class _queue_watcher_thread(_threading.Thread):
     def run(self):
         while self.keep_running:
             msg = self.rcvd_pktq.delete_head()
-            print "Message picked up from the queue"
             ok, payload = ofdm_packet_utils.unmake_packet(msg.to_string())
             if self.callback:
                 self.callback(ok, payload)
