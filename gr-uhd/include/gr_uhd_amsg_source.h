@@ -1,6 +1,5 @@
-/* -*- c++ -*- */
 /*
- * Copyright 2002 Free Software Foundation, Inc.
+ * Copyright 2011 Free Software Foundation, Inc.
  * 
  * This file is part of GNU Radio
  * 
@@ -20,27 +19,21 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#ifndef INCLUDED_GR_UHD_AMSG_SOURCE_H
+#define INCLUDED_GR_UHD_AMSG_SOURCE_H
 
-#define _ISOC9X_SOURCE
-#include <gri_float_to_char.h>
-#include <math.h>
+#include <gr_uhd_api.h>
+#include <uhd/usrp/multi_usrp.hpp>
+#include <gr_msg_queue.h>
 
-static const int MIN_CHAR = -128;
-static const int MAX_CHAR =  127;
+class uhd_amsg_source;
 
+GR_UHD_API boost::shared_ptr<uhd_amsg_source> uhd_make_amsg_source(
+    const uhd::device_addr_t &device_addr,
+    gr_msg_queue_sptr msgq
+);
 
-void 
-gri_float_to_char (const float *in, char *out, int nsamples)
-{
-  for (int i = 0; i < nsamples; i++){
-    long int r = (long int) rint (in[i]);
-    if (r < MIN_CHAR)
-      r = MIN_CHAR;
-    else if (r > MAX_CHAR)
-      r = MAX_CHAR;
-    out[i] = r;
-  }
-}
+class GR_UHD_API uhd_amsg_source{
+};
+
+#endif /* INCLUDED_GR_UHD_AMSG_SOURCE_H */
